@@ -1,41 +1,39 @@
-"""Клас TestManager:
-    Метод __ініціалізації__():
-        self.creator = TestCreator()  // Створення об'єкта TestCreator
-        self.taker = TestTaker()  // Створення об'єкта TestAttempt
-        self.current_user = None  // Користувач ще не залогінений
+import pickle
+import os
+from user import User  # Імпорт класу User
+from test import Test  # Імпорт класу Test
 
-    Метод register():
-        username = отримати_ім'я_користувача()
-        User.register_user(username)  // Реєстрація нового користувача
-        відобразити_повідомлення("Користувача зареєстровано.")
+USERS_FILE = 'users.dat'
+TESTS_FILE = 'tests.dat'
 
-    Метод login():
-        username = отримати_ім'я_користувача()
-        user = User.load_user(username)  // Завантажити дані користувача
-        Якщо усе вірно:
-            self.current_user = user
-            Вивести відповідні повідомлення, про успішність виконання або ж неуспішність
+class ManagerTest:
+    def __init__(self):
+        self.users = self.load_data(USERS_FILE, {})
+        self.tests = self.load_data(TESTS_FILE, [])
+        self.load_default_tests()  # Завантажити тести за замовчуванням при ініціалізації
 
-    Метод user_actions():
-        Якщо self.current_user == None:
-            Вивести повідомленні про те, що треба увійти або зареєструватися в системі
+    def load_data(self, filename, default):
+        if os.path.exists(filename):
+            with open(filename, 'rb') as f:
+                return pickle.load(f)
+        return default
 
-           Вивести_вікно_доступних_дій()
+    def save_data(self, filename, data):
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
 
-    Метод create_test(test_name, questions):
-        self.creator.add_test(test_name, questions)  // Додати тест через TestCreator
-        Відобразити_повідомлення("Тест '{test_name}' успішно створено.")
+    def save_user(self, user):
+        self.users[user.username] = user
+        self.save_data(USERS_FILE, self.users)
 
-Метод create_test():
-    test_name = отримати_назву_тесту
-    test_type = запитати_тип_тесту()  // вибір типу теста
-    questions = отримати_запитання()
-    self.creator.add_test(test_name, questions, test_type)  // Створення тесту за допомогою TestCreator
+    def save_test(self, test):
+        self.tests.append(test)
+        self.save_data(TESTS_FILE, self.tests)
 
-    Метод view_progress():
-        progress = self.taker.get_progress(self.current_user)  // Отримати прогрес через TestAttempt
-        відобразити_результати(progress)
+    def load_default_tests(self):
+        if not self.tests:  # Завантажувати тільки, якщо немає тестів
+            for test in DEFAULT_TESTS:
+                self.tests.append(test)
+            self.save_data(TESTS_FILE, self.tests)
 
-    Метод load_tests(filename):
-        self.creator.load_tests(filename)  // Завантажити тести з файлу
 
