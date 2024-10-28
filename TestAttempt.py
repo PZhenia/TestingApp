@@ -1,21 +1,42 @@
+from tkinter import simpledialog, messagebox
+
 class TestAttempt:
-    def __init__(self, test_name, questions):
-        self.test_name = test_name  # Назва тесту
-        self.questions = questions  # Список питань
-        self.score = 0              # Набраний бал
-        self.current_question = 0   # Індекс поточного питання
+    def __init__(self, manager):
+        self.manager = manager
 
-    def answer_question(self, answer):
-        #Метод для відповіді на поточне питання
-        """set correct_answer to self.questions[self.current_question]['correct']
-        if answer equals correct_answer:
-            increment self.score by 1
-        increment self.current_question by 1"""
+    def take_test(self, user):
+        if not self.manager.tests:
+            self.manager.load_default_tests()  # Завантажити тести за замовчуванням
 
-    def is_finished(self):
-        #Перевіряє, чи закінчився тест
-        """return self.current_question is greater than or equal to length of self.questions"""
+        test_titles = [test.title for test in self.manager.tests]
+        selected_test = simpledialog.askstring("Take Test", f"Select test:\n{', '.join(test_titles)}")
 
-    def get_result(self):
-        #Повертає загальний результат тесту у відсотках
-        return (self.score / len(self.questions)) * 100
+        test = next((t for t in self.manager.tests if t.title == selected_test), None)
+        if not test:
+            messagebox.showerror("Error", "Test not found.")
+            return
+
+        score = 0
+        for question in test.questions:
+            options_text = f"Options: {', '.join(question['options'])}" if question['options'] else ""
+            answer = simpledialog.askstring("Question", f"{question['question']}\n{options_text}").strip()
+
+            # Перевіряємо правильність відповіді залежно від типу питання
+            if question['type'] == 'single' or question['type'] == 'multiple':
+                correct_answers = set(map(str.strip, question['answer'].split(',')))
+                user_answers = set(map(str.strip, answer.split(',')))
+
+                if user_answers == correct_answers:
+                    score += 1
+
+            elif question['type'] == 'open':
+                if answer.lower() == question['answer'].strip().lower():
+                    score += 1
+
+        # Зберігаємо результат тесту у прогрес користувача
+        user.progress.add_attempt(selected_test, score)
+        messagebox.showinfo("Test Completed", f"You scored {score}/{len(test.questions)}")
+
+"""def load_default_tests(self):
+        for test in DEFAULT_TESTS:
+            self.manager.save_test(test)"""
