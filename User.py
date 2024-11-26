@@ -30,7 +30,7 @@ class BaseUser:
         self.progress = UserProgress()
 
     def has_access_to_create_tests(self):
-        return False
+        return False  # За замовчуванням, користувачі не мають права створювати тести.
 
     def get_user_type(self):
         return "Base User"
@@ -41,7 +41,7 @@ class StandardUser(BaseUser):
         self.password = password
 
     def has_access_to_create_tests(self):
-        return True
+        return True  # Стандартні користувачі мають доступ до створення тестів.
 
     def get_user_type(self):
         return "Standard User"
@@ -49,3 +49,7 @@ class StandardUser(BaseUser):
 class GuestUser(BaseUser):
     def __init__(self, username="Guest"):
         super().__init__(username)
+
+    def get_user_type(self):
+        return "Guest User"
+
