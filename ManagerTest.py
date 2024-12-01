@@ -6,7 +6,6 @@ from test import Test  # Імпорт класу Test
 USERS_FILE = 'users.dat'
 TESTS_FILE = 'tests.dat'
 
-# Абстрактний базовий клас для зберігання даних
 class DataManager:
     def load_data(self, filename, default):
         raise NotImplementedError("Method must be implemented in subclasses")
@@ -40,14 +39,14 @@ class TestDataManager(DataManager):
 
 class ManagerTest:
     def __init__(self):
-        self.user_manager = UserDataManager()  # Використовуємо UserDataManager для роботи з користувачами
-        self.test_manager = TestDataManager()  # Використовуємо TestDataManager для роботи з тестами
+        self.user_manager = UserDataManager() 
+        self.test_manager = TestDataManager()  
         
         # Завантажуємо дані
         self.users = self.user_manager.load_data(USERS_FILE, {})
         self.tests = self.test_manager.load_data(TESTS_FILE, [])
         
-        self.load_default_tests()  # Завантажити тести за замовчуванням при ініціалізації
+        self.load_default_tests()  
 
     def save_user(self, user):
         self.users[user.username] = user
