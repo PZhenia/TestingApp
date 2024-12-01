@@ -16,7 +16,6 @@ class SingleChoiceQuestion(Question):
         self.options = options
 
     def evaluate(self, user_answer):
-
         return 1 if user_answer == self.answer else 0
 
 
@@ -27,7 +26,6 @@ class MultipleChoiceQuestion(Question):
         self.options = options
 
     def evaluate(self, user_answer):
-
         correct_answers_set = set(self.answer)
         user_answers_set = set(user_answer)
         correct_count = len(correct_answers_set & user_answers_set)
