@@ -1,9 +1,3 @@
-class User:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-        self.progress = UserProgress()
-
 class UserProgress:
     def __init__(self):
         self.test_attempts = {}
@@ -25,8 +19,9 @@ class UserProgress:
         return f"Total Tests: {total_tests}, Average Score: {average_score:.2f}"
 
 class BaseUser:
-    def __init__(self, username):
+    def __init__(self, username, password):
         self.username = username
+        self.password = password
         self.progress = UserProgress()
 
     def has_access_to_create_tests(self):
@@ -34,6 +29,12 @@ class BaseUser:
 
     def get_user_type(self):
         return "Base User"
+
+    def view_progress(self):
+        return self.progress.view_progress()
+
+    def get_statistics(self):
+        return self.progress.get_statistics()
 
 class StandardUser(BaseUser):
     def __init__(self, username, password):

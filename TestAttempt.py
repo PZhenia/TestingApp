@@ -1,43 +1,7 @@
 from tkinter import simpledialog, messagebox
 from difflib import SequenceMatcher
 
-class TestAttempt:
-    def __init__(self, manager):
-        self.manager = manager
-
-    def take_test(self, user):
-        if not self.manager.tests:
-            self.manager.load_default_tests()  # Завантажити тести за замовчуванням
-
-        test_titles = [test.title for test in self.manager.tests]
-        selected_test = simpledialog.askstring("Take Test", f"Select test:\n{', '.join(test_titles)}")
-
-        test = next((t for t in self.manager.tests if t.title == selected_test), None)
-        if not test:
-            messagebox.showerror("Error", "Test not found.")
-            return
-
-        score = 0
-        for question in test.questions:
-            options_text = f"Options: {', '.join(question['options'])}" if question['options'] else ""
-            answer = simpledialog.askstring("Question", f"{question['question']}\n{options_text}").strip()
-
-            # Перевіряємо правильність відповіді залежно від типу питання
-            if question['type'] == 'single' or question['type'] == 'multiple':
-                correct_answers = set(map(str.strip, question['answer'].split(',')))
-                user_answers = set(map(str.strip, answer.split(',')))
-
-                if user_answers == correct_answers:
-                    score += 1
-
-            elif question['type'] == 'open':
-                if answer.lower() == question['answer'].strip().lower():
-                    score += 1
-
-        # Зберігаємо результат тесту у прогрес користувача
-        user.progress.add_attempt(selected_test, score)
-        messagebox.showinfo("Test Completed", f"You scored {score}/{len(test.questions)}")
-
+# Патерн "Стратегія"
 class ScoringStrategy:
     def evaluate(self, user_answer, correct_answer):
         raise NotImplementedError
@@ -55,6 +19,30 @@ class BaseTestAttempt:
     def __init__(self, manager, scoring_strategy):
         self.manager = manager
         self.scoring_strategy = scoring_strategy
+
+class StandardTestAttempt(BaseTestAttempt):
+    def take_test(self, user):
+        if not self.manager.tests:
+            self.manager.load_default_tests()
+
+        test_titles = [test.title for test in self.manager.tests]
+        selected_test = simpledialog.askstring("Take Test", f"Select test:\n{', '.join(test_titles)}")
+
+        test = next((t for t in self.manager.tests if t.title == selected_test), None)
+        if not test:
+            messagebox.showerror("Error", "Test not found.")
+            return
+
+        score = 0
+        for question in test.questions:
+            options_text = f"Options: {', '.join(question['options'])}" if question['options'] else ""
+            answer = simpledialog.askstring("Question", f"{question['question']}\n{options_text}").strip()
+
+            if self.scoring_strategy.evaluate(answer, question['answer']):
+                score += 1
+
+        user.progress.add_attempt(selected_test, score)
+        messagebox.showinfo("Test Completed", f"You scored {score}/{len(test.questions)}")
 
 class FocusedTestAttempt(BaseTestAttempt):
     def take_test(self, user):
@@ -111,4 +99,14 @@ class AdaptiveTestAttempt(BaseTestAttempt):
 
         messagebox.showinfo("Test Completed", f"You scored {score}/{len(test.questions)} after adaptive selection.")
 
-
+# Патерн "Фабрика"
+class TestAttemptFactory:
+    def create_test_attempt(type_, manager, scoring_strategy):
+        if type_ == "standard":
+            return StandardTestAttempt(manager, scoring_strategy)
+        elif type_ == "focused":
+            return FocusedTestAttempt(manager, scoring_strategy)
+        elif type_ == "adaptive":
+            return AdaptiveTestAttempt(manager, scoring_strategy)
+        else:
+            raise ValueError(f"Unknown test attempt type: {type_}")
